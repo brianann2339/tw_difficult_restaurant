@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雙北分區地圖｜台灣預約困難餐廳圖鑑</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
+<style>
+:root{
+  --bg:#151210; --bg2:#1e1a17; --card:#221d19; --card2:#282219;
+  --line:#3a322b; --txt:#f0e9df; --sub:#b0a596; --dim:#877c6d;
+  --acc:#e8843c; --acc2:#f4b860;
+  --lv5:#c084fc; --lv5bg:#3b2a52; --lv4:#f87171; --lv4bg:#4a2323;
+  --lv3:#fbbf24; --lv3bg:#453413; --lv2:#4ade80; --lv2bg:#1d3b28;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.55;padding-bottom:56px}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+header{padding:22px 0 12px;text-align:center;background:linear-gradient(180deg,#241c14 0%,var(--bg) 100%)}
+header h1{font-size:1.4rem;letter-spacing:.12em;font-weight:900}
+header h1 span{color:var(--acc)}
+.sub{color:var(--sub);font-size:.8rem;margin-top:6px;letter-spacing:.03em}
+.back{display:inline-block;margin-top:10px;color:var(--acc2);font-size:.8rem;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--bg2)}
+.back:hover{border-color:var(--acc)}
+#map{height:440px;border:1px solid var(--line);border-radius:16px;margin-top:12px;background:#1b1714;position:relative;z-index:1}
+@media(max-width:639px){#map{height:46vh;min-height:280px}}
+.leaflet-container{font-family:inherit;background:#1b1714}
+.leaflet-tile-pane{opacity:.55;filter:grayscale(.35) brightness(.85)}
+.leaflet-control-attribution{background:rgba(21,18,16,.8)!important;color:var(--dim)!important;font-size:.6rem}
+.leaflet-control-attribution a{color:var(--sub)!important}
+.leaflet-bar a{background:var(--card)!important;color:var(--txt)!important;border-color:var(--line)!important}
+.dlabel{pointer-events:none;white-space:nowrap;}
+.dlabel>span{display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;text-align:center;line-height:1.1;text-shadow:0 1px 3px #000,0 0 6px #000;font-weight:900;color:var(--txt);font-size:.78rem}
+.dlabel i{display:block;font-style:normal;font-size:.68rem;color:var(--acc2);font-weight:800}
+.dlabel.on,.dlabel.on i{color:#1a120a;text-shadow:none}
+.maperr{position:absolute;left:12px;right:12px;bottom:12px;z-index:1001;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.82rem;color:var(--txt);line-height:1.7}
+.dlabel.zero{opacity:.45}
+#map.lowzoom .dlabel{display:none}
+.leaflet-tooltip.dtip{background:var(--card);color:var(--txt);border:1px solid var(--line);font-size:.74rem;font-weight:700;box-shadow:0 2px 8px #000}
+.leaflet-tooltip.dtip::before{display:none}
+.leaflet-interactive{cursor:pointer}
+.maphint{font-size:.7rem;color:var(--dim);margin:6px 2px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.legend{display:flex;gap:6px;align-items:center}
+.legend s{display:inline-block;width:14px;height:10px;border-radius:2px;text-decoration:none;border:1px solid var(--line)}
+.ctl{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:12px}
+.row{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px dashed #2e2822}
+.row:last-of-type{border-bottom:none}
+.row[hidden]{display:none}
+.row .lbl{flex:0 0 52px;font-size:.74rem;color:var(--acc);font-weight:800;padding-top:5px;letter-spacing:.05em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.chip{border:1px solid var(--line);background:var(--bg2);color:var(--sub);border-radius:999px;padding:4px 11px;font-size:.76rem;cursor:pointer;white-space:nowrap;transition:.15s;font-family:inherit}
+.chip i{font-style:normal;color:var(--dim);font-size:.68rem;margin-left:3px}
+.chip:hover{border-color:var(--acc2)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#1a120a;font-weight:700}
+.chip.on i{color:#4a2a12}
+.mini{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--acc2);border-radius:8px;padding:4px 9px;font-size:.7rem;cursor:pointer;font-family:inherit;align-self:flex-start;margin-top:1px}
+.mini:hover{border-color:var(--acc)}
+.count{font-size:.74rem;color:var(--dim);margin:8px 2px 0}
+.count b{color:var(--acc2)}
+.sect{margin:22px 0 8px;font-size:1rem;font-weight:900;letter-spacing:.1em;color:var(--sub);display:flex;align-items:center;gap:10px}
+.sect small{font-size:.72rem;color:var(--dim);font-weight:400;letter-spacing:.02em}
+.sect::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:640px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.chead{display:flex;align-items:flex-start;gap:8px}
+.cname{font-size:1.05rem;font-weight:900;letter-spacing:.02em}
+.cen{font-size:.68rem;color:var(--dim);margin-top:1px}
+.citypill{margin-left:auto;flex:0 0 auto;background:var(--bg2);border:1px solid var(--line);color:var(--acc2);border-radius:8px;padding:2px 8px;font-size:.7rem;font-weight:700}
+.ctype{font-size:.78rem;color:var(--sub)}
+.badges{display:flex;flex-wrap:wrap;gap:5px}
+.b{font-size:.68rem;border-radius:6px;padding:2px 7px;font-weight:700;letter-spacing:.03em}
+.b.lv5{background:var(--lv5bg);color:var(--lv5)}
+.b.lv4{background:var(--lv4bg);color:var(--lv4)}
+.b.lv3{background:var(--lv3bg);color:var(--lv3)}
+.b.lv2{background:var(--lv2bg);color:var(--lv2)}
+.b.lv1{background:#2a2a2e;color:#c9c2b6}
+.b.rt{background:#20293a;color:#93b4f5}
+.b.mstar{background:#4d181c;color:#ff8080;font-weight:800}
+.b.mbib{background:#5a3410;color:#f2a95c;font-weight:800}
+.b.msel{background:#2f2a20;color:#d8c290}
+.b.p500{background:#123a2e;color:#5fd0a0;font-weight:800}
+.rule{background:var(--bg2);border-left:3px solid var(--acc);border-radius:0 10px 10px 0;padding:7px 11px;font-size:.78rem}
+.rule b{color:var(--acc2)}
+.meta{font-size:.75rem;color:var(--sub)}
+.meta .lbl{color:var(--dim)}
+.note{font-size:.73rem;color:var(--dim)}
+.actions{display:flex;gap:8px;margin-top:2px}
+.btn{flex:1;text-align:center;text-decoration:none;font-size:.8rem;font-weight:800;border-radius:10px;padding:8px 0;letter-spacing:.05em}
+.btn.book{background:var(--acc);color:#1a120a}
+.btn.tel{background:var(--bg2);color:var(--txt);border:1px solid var(--line)}
+.btn.dis{background:var(--bg2);color:var(--dim);border:1px dashed var(--line);pointer-events:none}
+.empty{text-align:center;color:var(--dim);padding:40px 0;font-size:.85rem;line-height:1.9}
+footer{margin-top:34px;padding:18px 4px 10px;border-top:1px solid var(--line);font-size:.68rem;color:var(--dim);line-height:1.7}
+footer b{color:var(--sub)}
+footer a{color:var(--sub)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>雙北<span>分區</span>地圖</h1>
+    <div class="sub">點地圖上的區，或勾選下方的區，列出該區的收錄餐廳（台北市・新北市）</div>
+    <a class="back" href="index.html">← 回台灣預約困難餐廳圖鑑</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="map" role="application" aria-label="雙北行政區地圖"></div>
+  <div class="maphint">
+    <span>地圖可拖曳、縮放；點一下區塊即勾選／取消。較遠的區（三峽、萬里、瑞芳…）也可直接在下方勾選。</span>
+    <span class="legend">店數：<s style="background:rgba(232,132,60,.15)"></s>少 <s style="background:rgba(232,132,60,.38)"></s> <s style="background:rgba(232,132,60,.6)"></s> <s style="background:rgba(232,132,60,.82)"></s>多　<s style="background:#f4b860"></s>已勾選</span>
+  </div>
+
+  <div class="ctl">
+    <div class="row"><span class="lbl">台北市</span><div class="chips" id="chipsTpe"></div><button class="mini" type="button" data-all="台北">全選</button></div>
+    <div class="row"><span class="lbl">新北市</span><div class="chips" id="chipsNtp"></div><button class="mini" type="button" data-all="新北">全選</button></div>
+    <div class="row" id="rowUnk" hidden><span class="lbl">未分區</span><div class="chips" id="chipsUnk"></div></div>
+    <div class="row"><span class="lbl">類別</span><div class="chips" id="michRow"></div><button class="mini" type="button" id="clearBtn">清除勾選</button></div>
+    <div class="count" id="cnt"></div>
+  </div>
+
+  <div id="list"></div>
+  <div class="empty" id="empty">尚未勾選任何區。<br>請點地圖上的區塊，或在上方勾選想找的區。</div>
+
+  <footer>
+    <b>說明</b>：本頁只列台北市、新北市且仍營業中的收錄餐廳；區別依各店地址判定，多分店者列於各分店所在區並加註。放位規則、訂位連結等資料與<a href="index.html">主頁</a>相同，以各店最新公告為準。<br>
+    行政區界線與區中心座標取自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>（© OpenStreetMap contributors，ODbL；經 Nominatim 取得並簡化），底圖為 OpenStreetMap 標準圖磚。
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
+<script>
+const TPE=['中正','大同','中山','松山','大安','萬華','信義','士林','北投','內湖','南港','文山'];
+const NTP=['板橋','三重','中和','永和','新莊','新店','樹林','鶯歌','三峽','淡水','汐止','瑞芳','土城','蘆洲','五股','泰山','林口','深坑','石碇','坪林','三芝','石門','八里','平溪','雙溪','貢寮','金山','萬里','烏來'];
+const ORDER=[...TPE,...NTP]; const UNK='未分區';
+const CITY_OF={}; TPE.forEach(d=>CITY_OF[d]='台北'); NTP.forEach(d=>CITY_OF[d]='新北');
+const MICH={s3:['★★★ 三星','mstar'],s2:['★★ 二星','mstar'],s1:['★ 一星','mstar'],bib:['必比登','mbib'],sel:['米其林入選','msel']};
+const MICHCAT={'全部':d=>true,'米其林星級':d=>['s3','s2','s1'].includes(d.mich),'必比登':d=>d.mich==='bib','500盤':d=>!!d.p500};
+const LV={5:['傳說級','lv5'],4:['秒殺級','lv4'],3:['困難','lv3'],2:['熱門','lv2'],1:['一般','lv1']};
+const RT={fixed:'📅 固定日開搶',rolling:'⏰ 滾動開放',irregular:'📣 不定期公告',phone:'📞 電話預約',member:'🤝 熟客引薦',walkin:'🚶 現場候位'};
+
+let DATA=[], fMich='全部'; const SEL=new Set();
+const polys={}, labels={};
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function areasOf(d){return Array.isArray(d.area)? d.area : (d.area? [d.area] : [])}
+function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d))}
+function counts(list){const c={}; for(const d of list){const as=areasOf(d); if(!as.length) c[UNK]=(c[UNK]||0)+1; for(const a of as) c[a]=(c[a]||0)+1;} return c}
+const ALLCOUNT={}; // 不分類別的店數（決定哪些區出現）
+let CUR={};         // 目前類別下各區店數（tooltip／填色／點擊用）
+function mapErr(msg){document.getElementById('map').insertAdjacentHTML('beforeend',`<div class="maperr">${msg}</div>`)}
+
+// ---- 地圖（Leaflet 載不到時只停用地圖，勾選列與清單照常）----
+let map=null;
+if(typeof L==='undefined'){ mapErr('地圖元件（Leaflet）載入失敗，請改用下方勾選列選區。'); }
+else{
+  map=L.map('map',{scrollWheelZoom:false,zoomSnap:.5}).setView([25.035,121.53],12);
+  map.on('focus click',()=>map.scrollWheelZoom.enable()); map.on('blur',()=>map.scrollWheelZoom.disable());
+  map.getContainer().addEventListener('mouseleave',()=>map.scrollWheelZoom.disable());
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+  const syncZoomClass=()=>document.getElementById('map').classList.toggle('lowzoom',map.getZoom()<11.5);
+  map.on('zoomend',syncZoomClass); syncZoomClass();
+}
+function fillFor(n,on){if(on) return {fillColor:'#f4b860',fillOpacity:.78,color:'#f4b860',weight:2.5};
+  if(!n) return {fillColor:'#000',fillOpacity:.08,color:'#4a4038',weight:1,dashArray:'3 3'};
+  const op=n>=40?.82:n>=15?.6:n>=5?.38:.15; return {fillColor:'#e8843c',fillOpacity:op,color:'#e8843c',weight:1.2,dashArray:null}}
+function tipFor(name){const n=CUR[name]||0; const cat=fMich!=='全部'?'（'+fMich+'）':'';
+  return `${CITY_OF[name]||''}市${name}區・${n} 間${cat}`+(SEL.has(name)?'（點一下取消）':n?'（點一下勾選）':ALLCOUNT[name]?'（此類別無收錄餐廳）':'（無收錄餐廳）')}
+function stylePoly(name){const p=polys[name]; if(!p) return; p.setStyle(fillFor(CUR[name]||0,SEL.has(name)));
+  if(p.getTooltip()) p.setTooltipContent(tipFor(name)); if(SEL.has(name)) p.bringToFront();}
+function setLabel(name,n){const m=labels[name]; if(!m) return; const cls='dlabel'+(SEL.has(name)?' on':'')+(n?'':' zero');
+  m.setIcon(L.divIcon({className:cls,html:`<span>${name}<i>${n}</i></span>`,iconSize:null})); }
+function toggle(name){if(SEL.has(name)) SEL.delete(name); else SEL.add(name); render()}
+
+if(map) fetch('districts.geojson').then(r=>r.json()).then(gj=>{
+  L.geoJSON(gj,{style:f=>fillFor(0,false),onEachFeature:(f,layer)=>{const name=f.properties.name; polys[name]=layer;
+    layer.on('click',()=>{ if(SEL.has(name)||CUR[name]) toggle(name); });
+    layer.on('mouseover',()=>{ if(!SEL.has(name)) layer.setStyle({weight:2.5,color:'#f4b860'}); });
+    layer.on('mouseout',()=>stylePoly(name));
+    layer.bindTooltip(tipFor(name),{sticky:true,direction:'top',className:'dtip'});
+    labels[name]=L.marker([f.properties.lat,f.properties.lon],{icon:L.divIcon({className:'dlabel',html:`<span>${name}</span>`,iconSize:null}),interactive:false,keyboard:false}).addTo(map);
+  }}).addTo(map);
+  refreshMap();
+}).catch(e=>mapErr(`區界資料載入失敗（${esc(String(e))}）；仍可用下方勾選列。`));
+
+function refreshMap(){CUR=counts(pool()); if(!map) return; for(const name of ORDER){stylePoly(name); const m=labels[name]; if(!m) continue;
+  if(ALLCOUNT[name]){ if(!map.hasLayer(m)) m.addTo(map); setLabel(name,CUR[name]||0); } else if(map.hasLayer(m)) map.removeLayer(m); }}
+
+// ---- 勾選列 ----
+function chip(name,n,on){return `<button class="chip${on?' on':''}" type="button" data-d="${name}" aria-pressed="${on}">${name==UNK?UNK:name}<i>${n}</i></button>`}
+function renderChips(){const c=counts(pool());
+  const mk=lst=>lst.filter(a=>ALLCOUNT[a]).map(a=>chip(a,c[a]||0,SEL.has(a))).join('');
+  document.getElementById('chipsTpe').innerHTML=mk(TPE)||'<span class="note">—</span>';
+  document.getElementById('chipsNtp').innerHTML=mk(NTP)||'<span class="note">—</span>';
+  document.getElementById('rowUnk').hidden=!ALLCOUNT[UNK]; document.getElementById('chipsUnk').innerHTML=ALLCOUNT[UNK]?chip(UNK,c[UNK]||0,SEL.has(UNK)):'';
+  document.getElementById('michRow').innerHTML=Object.keys(MICHCAT).map(k=>`<button class="chip${fMich===k?' on':''}" type="button" data-m="${k}" aria-pressed="${fMich===k}">${k}</button>`).join('');
+}
+document.querySelector('.ctl').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.d){toggle(b.dataset.d);return}
+  if(b.dataset.m){fMich=b.dataset.m;render();return}
+  if(b.dataset.all){const lst=b.dataset.all==='台北'?TPE:NTP; lst.filter(a=>ALLCOUNT[a]).forEach(a=>SEL.add(a)); render();return}
+  if(b.id==='clearBtn'){SEL.clear();render();}
+});
+
+// ---- 清單 ----
+function card(d){
+  const lv=`<span class="b ${LV[d.level][1]}">${LV[d.level][0]}</span>`;
+  const rt=`<span class="b rt">${RT[d.ruleType]||''}</span>`;
+  const mb=d.mich?`<span class="b ${MICH[d.mich][1]}">${MICH[d.mich][0]}</span>`:'';
+  const p5=d.p500?`<span class="b p500">🍽 500盤·${d.p500.length}屆</span>`:'';
+  const as=areasOf(d);
+  const pill=as.length===1?`${d.city}・${as[0]}區`:d.city;
+  const multi=as.length>1?`<div class="note">📍 多分店：${as.map(a=>a+'區').join('・')}</div>`:'';
+  const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
+  return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div><div class="cen">${esc(d.en||'')}</div></div><span class="citypill">${pill}</span></div>
+    <div class="ctype">${esc(d.type)}${d.dist?' ・ '+esc(d.dist):''}</div>
+    <div class="badges">${mb}${p5}${lv}${rt}</div>
+    <div class="rule"><b>放位規則:</b>${esc(d.rule)}</div>
+    ${d.price?`<div class="meta"><span class="lbl">💰 價位:</span>${esc(d.price)}　<span class="lbl">🎫 平台:</span>${esc(d.platform||'—')}</div>`:''}
+    ${multi}${btns}</div>`;
+}
+const sortFn=(a,b)=>(b.level-a.level)||((b.p500?b.p500.length:0)-(a.p500?a.p500.length:0))||a.name.localeCompare(b.name,'zh-Hant');
+function render(){
+  renderChips(); refreshMap();
+  const P=pool(); const selected=[...ORDER,UNK].filter(a=>SEL.has(a));
+  const inSel=d=>{const as=areasOf(d); return as.some(a=>SEL.has(a))||(!as.length&&SEL.has(UNK))};
+  const list=P.filter(inSel);
+  document.getElementById('list').innerHTML=selected.map(a=>{const g=P.filter(d=>a===UNK?!areasOf(d).length:areasOf(d).includes(a)).sort(sortFn);
+    return `<div class="sect">${a===UNK?UNK:a+'區'}<small>${CITY_OF[a]||''}${CITY_OF[a]?'市・':''}${g.length} 間${fMich!=='全部'?'（'+fMich+'）':''}</small></div>`+(g.length?`<div class="grid">${g.map(card).join('')}</div>`:`<div class="note" style="padding:4px 2px 10px">此類別在本區沒有收錄餐廳</div>`)}).join('');
+  document.getElementById('empty').style.display=selected.length?'none':'block';
+  document.getElementById('cnt').innerHTML=selected.length?`已勾選 <b>${selected.length}</b> 區・共 <b>${list.length}</b> 間${fMich!=='全部'?'（'+fMich+'）':''}`:`尚未勾選（雙北共 ${P.length} 間${fMich!=='全部'?'・'+fMich:''}）`;
+  const h=selected.join(',')+(fMich!=='全部'?'|'+fMich:''); history.replaceState(null,'',h?'#'+encodeURIComponent(h):location.pathname+location.search);
+}
+function readHash(){let h=''; try{h=decodeURIComponent(location.hash.slice(1))}catch(e){return} if(!h) return; const [ds,m]=h.split('|');
+  ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK)&&ALLCOUNT[a]) SEL.add(a)}); if(m&&MICHCAT[m]) fMich=m;}
+window.addEventListener('hashchange',()=>{SEL.clear(); fMich='全部'; readHash(); if(DATA.length) render();});
+
+fetch('data.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{DATA=j;
+  Object.assign(ALLCOUNT,counts(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')))); // 不分類別的全量，決定哪些區出現
+  readHash(); render();
+}).catch(e=>{document.getElementById('empty').innerHTML=`資料載入失敗（${esc(String(e))}）。請改由 <a href="index.html">主頁</a> 使用縣市篩選。`});
+</script>
+</body>
+</html>
