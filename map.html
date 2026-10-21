@@ -76,6 +76,7 @@ header h1 span{color:var(--acc)}
 .b.lv2{background:var(--lv2bg);color:var(--lv2)}
 .b.lv1{background:#2a2a2e;color:#c9c2b6}
 .b.rt{background:#20293a;color:#93b4f5}
+.b.aw{background:#3a2a14;color:#f2c94c}
 .b.mstar{background:#4d181c;color:#ff8080;font-weight:800}
 .b.mbib{background:#5a3410;color:#f2a95c;font-weight:800}
 .b.msel{background:#2f2a20;color:#d8c290}
@@ -224,6 +225,7 @@ function card(d){
   const lv=`<span class="b ${LV[d.level][1]}">${LV[d.level][0]}</span>`;
   const rt=`<span class="b rt">${RT[d.ruleType]||''}</span>`;
   const mb=d.mich?`<span class="b ${MICH[d.mich][1]}">${MICH[d.mich][0]}</span>`:'';
+  const aw = d.awards? `<span class="b aw">🏆 ${esc(d.awards)}</span>`:'';
   const p5=d.p500?`<span class="b p500">🍽 500盤·${d.p500.length}屆</span>`:'';
   const as=areasOf(d);
   const pill=as.length===1?`${d.city}・${as[0]}區`:d.city;
@@ -231,7 +233,7 @@ function card(d){
   const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div><div class="cen">${esc(d.en||'')}</div></div><span class="citypill">${pill}</span></div>
     <div class="ctype">${esc(d.type)}${d.dist?' ・ '+esc(d.dist):''}</div>
-    <div class="badges">${mb}${p5}${lv}${rt}</div>
+    <div class="badges">${mb}${p5}${lv}${rt}${aw}</div>
     <div class="rule"><b>放位規則:</b>${esc(d.rule)}</div>
     ${d.price?`<div class="meta"><span class="lbl">💰 價位:</span>${esc(d.price)}　<span class="lbl">🎫 平台:</span>${esc(d.platform||'—')}</div>`:''}
     ${multi}${dishLine(d)}${btns}</div>`;
