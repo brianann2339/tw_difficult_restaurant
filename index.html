@@ -98,6 +98,11 @@ details.srcs summary{color:var(--dim);cursor:pointer;list-style:none}
 details.srcs a{color:#8fb3e8;word-break:break-all;display:block;margin-top:3px;text-decoration:none}
 .sect{margin:26px 0 8px;font-size:1rem;font-weight:900;letter-spacing:.1em;color:var(--sub);display:flex;align-items:center;gap:10px}
 .sect::after{content:"";flex:1;height:1px;background:var(--line)}
+details.closedbox>summary{list-style:none;cursor:pointer}
+details.closedbox>summary::-webkit-details-marker{display:none}
+details.closedbox .ccnt,details.closedbox .ctog{font-size:.78rem;font-weight:700;letter-spacing:0;color:var(--dim)}
+details.closedbox .ctog::before{content:"點開 ▾"}
+details.closedbox[open] .ctog::before{content:"收合 ▴"}
 footer{margin-top:34px;padding:18px 4px 10px;border-top:1px solid var(--line);font-size:.68rem;color:var(--dim);line-height:1.7}
 footer b{color:var(--sub)}
 .empty{text-align:center;color:var(--dim);padding:40px 0;font-size:.85rem}
@@ -138,8 +143,10 @@ footer b{color:var(--sub)}
   <div class="empty" id="empty" style="display:none">沒有符合條件的餐廳</div>
   <button id="moreBtn" type="button"></button>
 
-  <div class="sect" id="closedSect">🕯 近年熄燈(致敬名店)</div>
-  <div class="grid" id="gridClosed"></div>
+  <details class="closedbox" id="closedSect">
+    <summary class="sect">🕯 近年熄燈(致敬名店)<span class="ccnt" id="closedCnt"></span><span class="ctog"></span></summary>
+    <div class="grid" id="gridClosed"></div>
+  </details>
 
   <footer>
     <b>使用說明與免責</b>:各店放位規則、價格、營業狀態隨時可能調整,出發與搶位前請以官方 IG/FB/官網最新公告為準;標注「需確認」者代表未查得官方明文。難度分級:<b>傳說級</b>=熟客/引薦制、<b>秒殺級</b>=開放即搶空、<b>困難</b>=需提前數週至數月、<b>熱門</b>=需預約但可訂、<b>一般</b>=必比登/500盤等一般可訂位或現場候位。<br><br>
@@ -738,6 +745,7 @@ document.getElementById('stStar').textContent=ACTIVE.filter(d=>['s3','s2','s1'].
 document.getElementById('stBib').textContent=ACTIVE.filter(d=>d.mich==='bib').length;
 document.getElementById('stP500').textContent=ACTIVE.filter(d=>d.p500).length;
 document.getElementById('gridClosed').innerHTML=CLOSED.map(card).join('');
+document.getElementById('closedCnt').textContent=CLOSED.length+' 間';
 buildCal();
 render();
 </script>
