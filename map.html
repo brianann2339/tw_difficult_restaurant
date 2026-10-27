@@ -105,6 +105,7 @@ details.dishes .dlist{margin-top:4px}
 .btn.book{background:var(--acc);color:#1a120a}
 .btn.tel{background:var(--bg2);color:var(--txt);border:1px solid var(--line)}
 .btn.dis{background:var(--bg2);color:var(--dim);border:1px dashed var(--line);pointer-events:none}
+.btn.sns{background:var(--bg2);color:var(--acc2);border:1px solid var(--acc2)}
 .empty{text-align:center;color:var(--dim);padding:40px 0;font-size:.85rem;line-height:1.9}
 footer{max-width:960px;margin:34px auto 0;padding:18px 4px 10px;border-top:1px solid var(--line);font-size:.68rem;color:var(--dim);line-height:1.7}
 footer b{color:var(--sub)}
@@ -133,6 +134,7 @@ footer a{color:var(--sub)}
     <div class="row" id="rowUnk" hidden><span class="lbl">未分區</span><div class="chips" id="chipsUnk"></div></div>
     <div class="row"><span class="lbl">類別</span><div class="chips" id="michRow"></div><button class="mini" type="button" id="clearBtn">清除勾選</button></div>
     <div class="row"><span class="lbl">種類</span><div class="chips" id="catRow"></div></div>
+    <div class="row"><span class="lbl">訂位規則</span><div class="chips" id="rtRow"></div></div>
     <div class="count" id="cnt"></div>
   </div>
 
@@ -156,13 +158,13 @@ const MICHCAT={'全部':d=>true,'米其林星級':d=>['s3','s2','s1'].includes(d
 const LV={5:['傳說級','lv5'],4:['秒殺級','lv4'],3:['困難','lv3'],2:['熱門','lv2'],1:['一般','lv1']};
 const RT={fixed:'📅 固定日開搶',rolling:'⏰ 滾動開放',irregular:'📣 不定期公告',phone:'📞 電話預約',member:'🤝 熟客引薦',walkin:'🚶 現場候位'};
 
-let DATA=[], fMich='全部', fCat='全部', CATS=[]; const SEL=new Set();
+let DATA=[], fMich='全部', fCat='全部', fRt='全部', CATS=[], RTS=[]; const SEL=new Set();
 const polys={}, labels={};
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 function escA(s){return esc(s).replace(/"/g,'&quot;')}
-function fLabel(){const a=[fMich,fCat].filter(x=>x!=='全部'); return esc(a.join('、'))}  // 目前篩選條件（類別、種類）的文字（已跳脫，可直接放進 HTML）
+function fLabel(){const a=[fMich,fCat,fRt==='全部'?fRt:RT[fRt]].filter(x=>x!=='全部'); return esc(a.join('、'))}  // 目前篩選條件（類別、種類、訂位規則）的文字（已跳脫，可直接放進 HTML）
 function areasOf(d){return Array.isArray(d.area)? d.area : (d.area? [d.area] : [])}
-function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat))}
+function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat) && (fRt==='全部'||d.ruleType===fRt))}
 function counts(list){const c={}; for(const d of list){const as=areasOf(d); if(!as.length) c[UNK]=(c[UNK]||0)+1; for(const a of as) c[a]=(c[a]||0)+1;} return c}
 const ALLCOUNT={}; // 不分類別的店數（決定哪些區出現）
 let CUR={};         // 目前類別下各區店數（tooltip／填色／點擊用）
@@ -213,11 +215,13 @@ function renderChips(){const c=counts(pool());
   document.getElementById('rowUnk').hidden=!ALLCOUNT[UNK]; document.getElementById('chipsUnk').innerHTML=ALLCOUNT[UNK]?chip(UNK,c[UNK]||0,SEL.has(UNK)):'';
   document.getElementById('michRow').innerHTML=Object.keys(MICHCAT).map(k=>`<button class="chip${fMich===k?' on':''}" type="button" data-m="${k}" aria-pressed="${fMich===k}">${k}</button>`).join('');
   document.getElementById('catRow').innerHTML=['全部',...CATS].map(k=>`<button class="chip${fCat===k?' on':''}" type="button" data-c="${escA(k)}" aria-pressed="${fCat===k}">${esc(k)}</button>`).join('');
+  document.getElementById('rtRow').innerHTML=['全部',...RTS].map(k=>`<button class="chip${fRt===k?' on':''}" type="button" data-r="${k}" aria-pressed="${fRt===k}">${k==='全部'?k:RT[k]}</button>`).join('');
 }
 document.querySelector('.ctl').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b||!DATA.length) return;  // 資料到之前不動作，免得清掉網址上的篩選
   if(b.dataset.d){toggle(b.dataset.d);return}
   if(b.dataset.m){fMich=b.dataset.m;render();return}
   if(b.dataset.c){fCat=b.dataset.c;render();return}
+  if(b.dataset.r){fRt=b.dataset.r;render();return}
   if(b.dataset.all){const lst=b.dataset.all==='台北'?TPE:NTP; lst.filter(a=>ALLCOUNT[a]).forEach(a=>SEL.add(a)); render();return}
   if(b.id==='clearBtn'){SEL.clear();render();}
 });
@@ -246,7 +250,7 @@ function card(d){
   const as=areasOf(d);
   const pill=as.length===1?`${d.city}・${as[0]}區`:d.city;
   const multi=as.length>1?`<div class="note">📍 多分店：${as.map(a=>a+'區').join('・')}</div>`:'';
-  const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
+  const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:d.sns&&d.sns.length?d.sns.map(s=>`<a class="btn sns" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.n)} →</a>`).join(''):`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div><div class="cen">${esc(d.en||'')}</div></div><span class="citypill">${pill}</span></div>
     <div class="ctype">${esc(d.type)}${d.dist?' ・ '+esc(d.dist):''}</div>
     <div class="badges">${mb}${p5}${lv}${rt}${aw}</div>
@@ -264,16 +268,18 @@ function render(){
     return `<div class="sect">${a===UNK?UNK:a+'區'}<small>${CITY_OF[a]||''}${CITY_OF[a]?'市・':''}${g.length} 間${fLabel()?'（'+fLabel()+'）':''}</small></div>`+(g.length?`<div class="grid">${g.map(card).join('')}</div>`:`<div class="note" style="padding:4px 2px 10px">此篩選條件在本區沒有收錄餐廳</div>`)}).join('');
   document.getElementById('empty').style.display=selected.length?'none':'block';
   document.getElementById('cnt').innerHTML=selected.length?`已勾選 <b>${selected.length}</b> 區・共 <b>${list.length}</b> 間${fLabel()?'（'+fLabel()+'）':''}`:`尚未勾選（雙北共 ${P.length} 間${fLabel()?'・'+fLabel():''}）`;
-  const h=selected.join(',')+(fMich!=='全部'||fCat!=='全部'?'|'+(fMich!=='全部'?fMich:''):'')+(fCat!=='全部'?'|'+fCat:''); history.replaceState(null,'',h?'#'+encodeURIComponent(h):location.pathname+location.search);
+  const hp=[selected.join(','),fMich!=='全部'?fMich:'',fCat!=='全部'?fCat:'',fRt!=='全部'?fRt:'']; while(hp.length>1&&!hp[hp.length-1]) hp.pop();  // 區|類別|種類|訂位規則
+  const h=hp.join('|'); history.replaceState(null,'',h?'#'+encodeURIComponent(h):location.pathname+location.search);
 }
-function readHash(){let h=''; try{h=decodeURIComponent(location.hash.slice(1))}catch(e){return} if(!h) return; const [ds,m,c]=h.split('|');
-  ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK)&&ALLCOUNT[a]) SEL.add(a)}); if(m&&Object.prototype.hasOwnProperty.call(MICHCAT,m)) fMich=m; if(c&&CATS.includes(c)) fCat=c;}
-window.addEventListener('hashchange',()=>{SEL.clear(); fMich='全部'; fCat='全部'; readHash(); if(DATA.length) render();});
+function readHash(){let h=''; try{h=decodeURIComponent(location.hash.slice(1))}catch(e){return} if(!h) return; const [ds,m,c,r]=h.split('|');
+  ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK)&&ALLCOUNT[a]) SEL.add(a)}); if(m&&Object.prototype.hasOwnProperty.call(MICHCAT,m)) fMich=m; if(c&&CATS.includes(c)) fCat=c; if(r&&RTS.includes(r)) fRt=r;}
+window.addEventListener('hashchange',()=>{SEL.clear(); fMich='全部'; fCat='全部'; fRt='全部'; readHash(); if(DATA.length) render();});
 
 fetch('data.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{DATA=j;
   Object.assign(ALLCOUNT,counts(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')))); // 不分類別的全量，決定哪些區出現
   const twinCats=new Set(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')).map(d=>d.cat).filter(Boolean));
   CATS=[...new Set(DATA.filter(d=>!d.closed).map(d=>d.cat).filter(Boolean))].filter(c=>twinCats.has(c));
+  RTS=Object.keys(RT).filter(k=>DATA.some(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&d.ruleType===k));
   readHash(); render();
 }).catch(e=>{document.getElementById('empty').innerHTML=`資料載入失敗（${esc(String(e))}）。請改由 <a href="index.html">主頁</a> 使用縣市篩選。`});
 </script>
