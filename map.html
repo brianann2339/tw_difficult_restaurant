@@ -159,8 +159,8 @@ const MICH={s3:['★★★ 三星','mstar'],s2:['★★ 二星','mstar'],s1:['�
 const MICHCAT={'全部':d=>!d.op,'米其林星級':d=>['s3','s2','s1'].includes(d.mich),'必比登':d=>d.mich==='bib','500盤':d=>!!d.p500&&!d.op,'500盤單盤':d=>!!d.op};
 const OP='500盤單盤';  // 一盤名單（one-plate.json）的雙北店：沒有種類資料，選這個類別時隱藏種類列
 const ST={open:'Google 地圖未標歇業',unk:'未確認（Google 地圖找不到這家店）',paused:'暫停營業'};  // 單盤店營業狀態（d.st）
-function telBtns(p){   // 電話欄可能有多支號碼（；／分隔、附分店名）或分機（#、分機）：每支一顆鈕，撥號只帶主號碼
-  return (p||'').split(/[；;／\/]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/\+?[\d(（][\d \-()（）]{6,}\d/); return m?`<a class="btn tel" href="tel:${m[0].replace(/[^0-9+]/g,'')}">☎ ${esc(x)}</a>`:'';}).join('');
+function telBtns(p){   // 電話欄可能有多支號碼（；／分隔、附分店名）或分機（#、分機）：每支一顆鈕，撥號只帶主號碼（區碼括號之外的括號是說明，不算號碼）
+  return (p||'').split(/[；;／\/]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/\+?(?:[(（]\d{1,4}[)）] ?)?\d[\d \-]{5,}\d/); return m?`<a class="btn tel" href="tel:${m[0].replace(/[^0-9+]/g,'')}">☎ ${esc(x)}</a>`:'';}).join('');
 }
 const LV={5:['傳說級','lv5'],4:['秒殺級','lv4'],3:['困難','lv3'],2:['熱門','lv2'],1:['一般','lv1']};
 const RT={fixed:'📅 固定日開搶',rolling:'⏰ 滾動開放',irregular:'📣 不定期公告',phone:'📞 電話預約',member:'🤝 熟客引薦',walkin:'🚶 現場候位'};
