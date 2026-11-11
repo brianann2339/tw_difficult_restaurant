@@ -138,6 +138,7 @@ footer b{color:var(--sub)}
     <div class="chiprow" id="cityRow"></div>
     <div class="chiprow" id="catRow"></div>
     <div class="chiprow" id="rtRow"></div>
+    <div class="chiprow" id="cathayRow"></div>
     <div class="count" id="cnt"></div>
   </div>
 
@@ -649,8 +650,9 @@ const RT = {fixed:'📅 固定日開搶',rolling:'⏰ 滾動開放',irregular:'�
 const MICH = {s3:['★★★ 三星','mstar'],s2:['★★ 二星','mstar'],s1:['★ 一星','mstar'],bib:['必比登','mbib'],sel:['米其林入選','msel']};
 const MICHCAT = {'星級':d=>['s3','s2','s1'].includes(d.mich),'推薦':d=>d.mich==='sel','必比登':d=>d.mich==='bib','非米其林':d=>!d.mich};
 const P500CAT = {'500盤':d=>!!d.p500,'常勝軍':d=>d.p500&&d.p500.length>=4};
+const CATHAYCAT = {'國泰VIP':d=>d.cathay==='vip','國泰一般':d=>d.cathay==='general'};
 
-let fCity='全部', fCat='全部', fRt='全部', fMich='全部', fP500='全部', q='';
+let fCity='全部', fCat='全部', fRt='全部', fMich='全部', fP500='全部', fCathay='全部', q='';
 let showAll=false; const RENDER_LIMIT=120;
 
 function chips(rowId, items, cur, setter, cnt){
@@ -735,6 +737,7 @@ function render(){
     city: d=>fCity==='全部'||d.city===fCity,
     cat:  d=>fCat==='全部'||d.cat===fCat,
     rt:   d=>fRt==='全部'||d.ruleType===rtKey,
+    cathay: d=>fCathay==='全部'||CATHAYCAT[fCathay](d),
   };
   const hit = d=>!q || (d.name+(d.en||'')+d.type+(d.city||'')+(d.dist||'')+(d.awards||'')+d.rule+(d.note||'')+(d.dishes? ' '+d.dishes.map(x=>x.n).join(' '):'')).toLowerCase().includes(q);
   const base = skip=>ACTIVE.filter(d=>hit(d) && Object.keys(F).every(k=>k===skip||F[k](d)));
@@ -745,6 +748,7 @@ function render(){
   chips('cityRow',cities,fCity,v=>fCity=v,tally('city',(it,d)=>d.city===it));
   chips('catRow',cats,fCat,v=>fCat=v,tally('cat',(it,d)=>d.cat===it));
   chips('rtRow',rts,fRt,v=>fRt=v,tally('rt',(it,d)=>RT[d.ruleType]===it));
+  chips('cathayRow',['全部','國泰VIP','國泰一般'],fCathay,v=>fCathay=v,tally('cathay',(it,d)=>CATHAYCAT[it](d)));
   const list = base(null).sort((a,b)=> (b.level-a.level) || ((b.p500?b.p500.length:0)-(a.p500?a.p500.length:0)));
   const shown = (showAll||list.length<=RENDER_LIMIT)? list : list.slice(0,RENDER_LIMIT);
   document.getElementById('grid').innerHTML=shown.map(card).join('');
