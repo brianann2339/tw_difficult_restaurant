@@ -82,6 +82,8 @@ header h1 span{color:var(--acc)}
 .b.mbib{background:#5a3410;color:#f2a95c;font-weight:800}
 .b.msel{background:#2f2a20;color:#d8c290}
 .b.p500{background:#123a2e;color:#5fd0a0;font-weight:800}
+.b.cvip{background:#2e1f45;color:#cfb2ff;font-weight:800}
+.b.cgen{background:#14303a;color:#7fd1e6;font-weight:800}
 .rule{background:var(--bg2);border-left:3px solid var(--acc);border-radius:0 10px 10px 0;padding:7px 11px;font-size:.78rem}
 .rule b{color:var(--acc2)}
 .meta{font-size:.75rem;color:var(--sub)}
@@ -250,6 +252,8 @@ function gmapLine(d){
   if(d.gmaps.length===1&&!d.gmaps[0].n) return `<div class="gmaps">📍 ${a(d.gmaps[0])}</div>`;
   return `<div class="gmaps">📍 Google 地圖（${d.gmaps.length} 處）：${d.gmaps.map(a).join('')}</div>`;
 }
+const CATHAY={vip:['國泰VIP','cvip','國泰世華 × inline 卡友專屬訂位：VIP／頂級卡友專屬餐廳'],general:['國泰一般','cgen','國泰世華 × inline 卡友專屬訂位：全卡友專屬餐廳']};
+function cathayBadge(d){ const c=CATHAY[d.cathay]; return c?`<span class="b ${c[1]}" title="${c[2]}">${c[0]}</span>`:''; }
 function opCard(d){
   const yy=y=>'’'+String(y).slice(2);
   const as=areasOf(d);
@@ -261,7 +265,7 @@ function opCard(d){
   const btns=bs?`<div class="actions">${bs}</div>`:'';
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div>${aka}</div><span class="citypill">${pill}</span></div>
     <div class="ctype">500盤 一盤餐廳${d.chk?'':'（未查證營業狀態與訂位方式）'}</div>
-    <div class="badges"><span class="b p500">🍽 500盤 1盤·${d.p500.map(yy).join('·')}</span>${RT[d.ruleType]?`<span class="b rt">${RT[d.ruleType]}</span>`:''}</div>
+    <div class="badges"><span class="b p500">🍽 500盤 1盤·${d.p500.map(yy).join('·')}</span>${RT[d.ruleType]?`<span class="b rt">${RT[d.ruleType]}</span>`:''}${cathayBadge(d)}</div>
     ${d.chk?`<div class="meta"><span class="lbl">🏪 營業狀態(${esc(d.chk)} 查):</span>${ST[d.st]||''}</div>${d.opNote?`<div class="meta">📝 ${esc(d.opNote)}</div>`:''}<div class="rule"><b>訂位方式:</b>${esc(d.rule)}</div>`:''}
     ${d.addr?`<div class="meta"><span class="lbl">📮 地址(${d.addrYear} 官方地圖):</span>${esc(d.addr)}</div>`:''}
     ${multi}${dishLine(d)}${btns}
@@ -280,7 +284,7 @@ function card(d){
   const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:d.sns&&d.sns.length?d.sns.map(s=>`<a class="btn sns" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.n)} →</a>`).join(''):`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div><div class="cen">${esc(d.en||'')}</div></div><span class="citypill">${pill}</span></div>
     <div class="ctype">${esc(d.type)}${d.dist?' ・ '+esc(d.dist):''}</div>
-    <div class="badges">${mb}${p5}${lv}${rt}${aw}</div>
+    <div class="badges">${mb}${p5}${lv}${rt}${aw}${cathayBadge(d)}</div>
     <div class="rule"><b>放位規則:</b>${esc(d.rule)}</div>
     ${d.price?`<div class="meta"><span class="lbl">💰 價位:</span>${esc(d.price)}　<span class="lbl">🎫 平台:</span>${esc(d.platform||'—')}</div>`:''}
     ${multi}${dishLine(d)}${btns}${gmapLine(d)}</div>`;
