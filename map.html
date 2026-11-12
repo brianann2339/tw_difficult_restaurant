@@ -138,6 +138,7 @@ footer a{color:var(--sub)}
     <div class="row"><span class="lbl">類別</span><div class="chips" id="michRow"></div><button class="mini" type="button" id="clearBtn">清除勾選</button></div>
     <div class="row"><span class="lbl">種類</span><div class="chips" id="catRow"></div></div>
     <div class="row"><span class="lbl">訂位規則</span><div class="chips" id="rtRow"></div></div>
+    <div class="row"><span class="lbl">難度</span><div class="chips" id="lvRow"></div></div>
     <div class="row"><span class="lbl">國泰</span><div class="chips" id="cathayRow"></div></div>
     <div class="count" id="cnt"></div>
   </div>
@@ -168,13 +169,13 @@ function telBtns(p){   // 電話欄可能有多支號碼（；／分隔、附分
 const LV={5:['傳說級','lv5'],4:['秒殺級','lv4'],3:['困難','lv3'],2:['熱門','lv2'],1:['一般','lv1']};
 const RT={fixed:'📅 固定日開搶',rolling:'⏰ 滾動開放',irregular:'📣 不定期公告',phone:'📞 電話預約',member:'🤝 熟客引薦',walkin:'🚶 現場候位'};
 
-let DATA=[], fMich='全部', fCat='全部', fRt='全部', fCathay='全部', CATS=[], RTS=[]; const SEL=new Set();
+let DATA=[], fMich='全部', fCat='全部', fRt='全部', fCathay='全部', fLv='全部', CATS=[], RTS=[], LVS=[]; const SEL=new Set();
 const polys={}, labels={};
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 function escA(s){return esc(s).replace(/"/g,'&quot;')}
-function fLabel(){const a=[fMich,fCat,fRt==='全部'?fRt:RT[fRt],fCathay==='全部'?fCathay:CATHAY[fCathay][0]].filter(x=>x!=='全部'); return esc(a.join('、'))}  // 目前篩選條件（類別、種類、訂位規則、國泰）的文字（已跳脫，可直接放進 HTML）
+function fLabel(){const a=[fMich,fCat,fRt==='全部'?fRt:RT[fRt],fLv==='全部'?fLv:'難度'+LV[fLv][0],fCathay==='全部'?fCathay:CATHAY[fCathay][0]].filter(x=>x!=='全部'); return esc(a.join('、'))}  // 目前篩選條件（類別、種類、訂位規則、難度、國泰）的文字（已跳脫，可直接放進 HTML）
 function areasOf(d){return Array.isArray(d.area)? d.area : (d.area? [d.area] : [])}
-function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat) && (fRt==='全部'||d.ruleType===fRt) && (fCathay==='全部'||d.cathay===fCathay))}
+function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat) && (fRt==='全部'||d.ruleType===fRt) && (fLv==='全部'||String(d.level)===fLv) && (fCathay==='全部'||d.cathay===fCathay))}
 function counts(list){const c={}; for(const d of list){const as=areasOf(d); if(!as.length){const k=d.multi?MUL:UNK; c[k]=(c[k]||0)+1;} for(const a of as) c[a]=(c[a]||0)+1;} return c}
 const ALLCOUNT={}; // 不分類別的店數（決定哪些區出現）；主站各類別與「500盤單盤」各算各的
 function setAll(){for(const k in ALLCOUNT) delete ALLCOUNT[k]; Object.assign(ALLCOUNT,counts(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&(fMich===OP)===!!d.op)))}
@@ -228,14 +229,17 @@ function renderChips(){const c=counts(pool());
   document.getElementById('catRow').innerHTML=['全部',...CATS].map(k=>`<button class="chip${fCat===k?' on':''}" type="button" data-c="${escA(k)}" aria-pressed="${fCat===k}">${esc(k)}</button>`).join('');
   document.getElementById('catRow').parentElement.hidden=fMich===OP;
   document.getElementById('rtRow').innerHTML=['全部',...RTS].map(k=>`<button class="chip${fRt===k?' on':''}" type="button" data-r="${k}" aria-pressed="${fRt===k}">${k==='全部'?k:RT[k]}</button>`).join('');
+  document.getElementById('lvRow').innerHTML=['全部',...LVS].map(k=>`<button class="chip${fLv===k?' on':''}" type="button" data-l="${k}" aria-pressed="${fLv===k}">${k==='全部'?k:LV[k][0]}</button>`).join('');
+  document.getElementById('lvRow').parentElement.hidden=fMich===OP;   // 單盤店沒有難度分級
   document.getElementById('cathayRow').innerHTML=['全部','vip','general'].map(k=>`<button class="chip${fCathay===k?' on':''}" type="button" data-k="${k}" aria-pressed="${fCathay===k}">${k==='全部'?k:CATHAY[k][0]}</button>`).join('');
 }
 document.querySelector('.ctl').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b||!DATA.length) return;  // 資料到之前不動作，免得清掉網址上的篩選
   if(b.dataset.d){toggle(b.dataset.d);return}
-  if(b.dataset.m){fMich=b.dataset.m; if(fMich===OP) fCat='全部'; setAll(); [...SEL].forEach(a=>{if(!ALLCOUNT[a]) SEL.delete(a)}); render();return}
+  if(b.dataset.m){fMich=b.dataset.m; if(fMich===OP){fCat='全部'; fLv='全部';} setAll(); [...SEL].forEach(a=>{if(!ALLCOUNT[a]) SEL.delete(a)}); render();return}
   if(b.dataset.c){fCat=b.dataset.c;render();return}
   if(b.dataset.r){fRt=b.dataset.r;render();return}
   if(b.dataset.k){fCathay=b.dataset.k;render();return}
+  if(b.dataset.l){fLv=b.dataset.l;render();return}
   if(b.dataset.all){const lst=b.dataset.all==='台北'?TPE:NTP; lst.filter(a=>ALLCOUNT[a]).forEach(a=>SEL.add(a)); render();return}
   if(b.id==='clearBtn'){SEL.clear();render();}
 });
@@ -302,12 +306,12 @@ function render(){
     return `<div class="sect">${a===UNK||a===MUL?a:a+'區'}<small>${CITY_OF[a]||''}${CITY_OF[a]?'市・':''}${g.length} 間${fLabel()?'（'+fLabel()+'）':''}</small></div>`+(g.length?`<div class="grid">${g.map(card).join('')}</div>`:`<div class="note" style="padding:4px 2px 10px">此篩選條件在本區沒有收錄餐廳</div>`)}).join('');
   document.getElementById('empty').style.display=selected.length?'none':'block';
   document.getElementById('cnt').innerHTML=selected.length?`已勾選 <b>${selected.length}</b> 區・共 <b>${list.length}</b> 間${fLabel()?'（'+fLabel()+'）':''}`:`尚未勾選（雙北共 ${P.length} 間${fLabel()?'・'+fLabel():''}）`;
-  const hp=[selected.join(','),fMich!=='全部'?fMich:'',fCat!=='全部'?fCat:'',fRt!=='全部'?fRt:'',fCathay!=='全部'?fCathay:'']; while(hp.length>1&&!hp[hp.length-1]) hp.pop();  // 區|類別|種類|訂位規則|國泰
+  const hp=[selected.join(','),fMich!=='全部'?fMich:'',fCat!=='全部'?fCat:'',fRt!=='全部'?fRt:'',fCathay!=='全部'?fCathay:'',fLv!=='全部'?fLv:'']; while(hp.length>1&&!hp[hp.length-1]) hp.pop();  // 區|類別|種類|訂位規則|國泰|難度
   const h=hp.join('|'); history.replaceState(null,'',h?'#'+encodeURIComponent(h):location.pathname+location.search);
 }
-function readHash(){let h=''; try{h=decodeURIComponent(location.hash.slice(1))}catch(e){return} if(!h) return; const [ds,m,c,r,k]=h.split('|');
-  if(m&&Object.prototype.hasOwnProperty.call(MICHCAT,m)) fMich=m; setAll(); ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK||a===MUL)&&ALLCOUNT[a]) SEL.add(a)}); if(fMich!==OP&&c&&CATS.includes(c)) fCat=c; if(r&&RTS.includes(r)) fRt=r; if(k==='vip'||k==='general') fCathay=k; }
-window.addEventListener('hashchange',()=>{SEL.clear(); fMich='全部'; fCat='全部'; fRt='全部'; fCathay='全部'; readHash(); setAll(); if(DATA.length) render();});
+function readHash(){let h=''; try{h=decodeURIComponent(location.hash.slice(1))}catch(e){return} if(!h) return; const [ds,m,c,r,k,lv]=h.split('|');
+  if(m&&Object.prototype.hasOwnProperty.call(MICHCAT,m)) fMich=m; setAll(); ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK||a===MUL)&&ALLCOUNT[a]) SEL.add(a)}); if(fMich!==OP&&c&&CATS.includes(c)) fCat=c; if(r&&RTS.includes(r)) fRt=r; if(k==='vip'||k==='general') fCathay=k; if(fMich!==OP&&lv&&LVS.includes(lv)) fLv=lv; }
+window.addEventListener('hashchange',()=>{SEL.clear(); fMich='全部'; fCat='全部'; fRt='全部'; fCathay='全部'; fLv='全部'; readHash(); setAll(); if(DATA.length) render();});
 
 Promise.all([fetch('data.json',{cache:'no-cache'}).then(r=>r.json()),
   fetch('one-plate.json',{cache:'no-cache'}).then(r=>r.ok?r.json():[]).catch(()=>[])])  // 一盤名單載不到時不顯示「500盤單盤」，其他照常
@@ -316,6 +320,7 @@ Promise.all([fetch('data.json',{cache:'no-cache'}).then(r=>r.json()),
   const twinCats=new Set(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')).map(d=>d.cat).filter(Boolean));
   CATS=[...new Set(DATA.filter(d=>!d.closed).map(d=>d.cat).filter(Boolean))].filter(c=>twinCats.has(c));
   RTS=Object.keys(RT).filter(k=>DATA.some(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&d.ruleType===k));
+  LVS=['5','4','3','2','1'].filter(k=>DATA.some(d=>!d.closed&&!d.op&&(d.city==='台北'||d.city==='新北')&&String(d.level)===k));
   readHash(); setAll(); render();
 }).catch(e=>{document.getElementById('empty').innerHTML=`資料載入失敗（${esc(String(e))}）。請改由 <a href="index.html">主頁</a> 使用縣市篩選。`});
 </script>
