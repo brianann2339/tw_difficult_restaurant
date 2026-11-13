@@ -84,6 +84,7 @@ header h1 span{color:var(--acc)}
 .b.p500{background:#123a2e;color:#5fd0a0;font-weight:800}
 .b.cvip{background:#2e1f45;color:#cfb2ff;font-weight:800}
 .b.cgen{background:#14303a;color:#7fd1e6;font-weight:800}
+.b.ccard{background:#24262c;color:#e3dccd;box-shadow:inset 0 0 0 1px #50555f;font-weight:800}
 .rule{background:var(--bg2);border-left:3px solid var(--acc);border-radius:0 10px 10px 0;padding:7px 11px;font-size:.78rem}
 .rule b{color:var(--acc2)}
 .meta{font-size:.75rem;color:var(--sub)}
@@ -139,7 +140,7 @@ footer a{color:var(--sub)}
     <div class="row"><span class="lbl">種類</span><div class="chips" id="catRow"></div></div>
     <div class="row"><span class="lbl">訂位規則</span><div class="chips" id="rtRow"></div></div>
     <div class="row"><span class="lbl">難度</span><div class="chips" id="lvRow"></div></div>
-    <div class="row"><span class="lbl">國泰</span><div class="chips" id="cathayRow"></div></div>
+    <div class="row"><span class="lbl">信用卡</span><div class="chips" id="cathayRow"></div></div>
     <div class="count" id="cnt"></div>
   </div>
 
@@ -169,13 +170,13 @@ function telBtns(p){   // 電話欄可能有多支號碼（；／分隔、附分
 const LV={5:['傳說級','lv5'],4:['秒殺級','lv4'],3:['困難','lv3'],2:['熱門','lv2'],1:['一般','lv1']};
 const RT={fixed:'📅 固定日開搶',rolling:'⏰ 滾動開放',irregular:'📣 不定期公告',phone:'📞 電話預約',member:'🤝 熟客引薦',walkin:'🚶 現場候位'};
 
-let DATA=[], fMich='全部', fCat='全部', fRt='全部', fCathay='全部', fLv='全部', CATS=[], RTS=[], LVS=[]; const SEL=new Set();
+let DATA=[], fMich='全部', fCat='全部', fRt='全部', fCathay='全部', fLv='全部', CATS=[], RTS=[], LVS=[], CKS=[]; const SEL=new Set();
 const polys={}, labels={};
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 function escA(s){return esc(s).replace(/"/g,'&quot;')}
-function fLabel(){const a=[fMich,fCat,fRt==='全部'?fRt:RT[fRt],fLv==='全部'?fLv:'難度'+LV[fLv][0],fCathay==='全部'?fCathay:CATHAY[fCathay][0]].filter(x=>x!=='全部'); return esc(a.join('、'))}  // 目前篩選條件（類別、種類、訂位規則、難度、國泰）的文字（已跳脫，可直接放進 HTML）
+function fLabel(){const a=[fMich,fCat,fRt==='全部'?fRt:RT[fRt],fLv==='全部'?fLv:'難度'+LV[fLv][0],fCathay==='全部'?fCathay:(CATHAY[fCathay]||CARDS[fCathay])[0]].filter(x=>x!=='全部'); return esc(a.join('、'))}  // 目前篩選條件（類別、種類、訂位規則、難度、信用卡）的文字（已跳脫，可直接放進 HTML）
 function areasOf(d){return Array.isArray(d.area)? d.area : (d.area? [d.area] : [])}
-function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat) && (fRt==='全部'||d.ruleType===fRt) && (fLv==='全部'||String(d.level)===fLv) && (fCathay==='全部'||d.cathay===fCathay))}
+function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat) && (fRt==='全部'||d.ruleType===fRt) && (fLv==='全部'||String(d.level)===fLv) && (fCathay==='全部'||d.cathay===fCathay||(d.cards||[]).includes(fCathay)))}
 function counts(list){const c={}; for(const d of list){const as=areasOf(d); if(!as.length){const k=d.multi?MUL:UNK; c[k]=(c[k]||0)+1;} for(const a of as) c[a]=(c[a]||0)+1;} return c}
 const ALLCOUNT={}; // 不分類別的店數（決定哪些區出現）；主站各類別與「500盤單盤」各算各的
 function setAll(){for(const k in ALLCOUNT) delete ALLCOUNT[k]; Object.assign(ALLCOUNT,counts(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&(fMich===OP)===!!d.op)))}
@@ -231,7 +232,7 @@ function renderChips(){const c=counts(pool());
   document.getElementById('rtRow').innerHTML=['全部',...RTS].map(k=>`<button class="chip${fRt===k?' on':''}" type="button" data-r="${k}" aria-pressed="${fRt===k}">${k==='全部'?k:RT[k]}</button>`).join('');
   document.getElementById('lvRow').innerHTML=['全部',...LVS].map(k=>`<button class="chip${fLv===k?' on':''}" type="button" data-l="${k}" aria-pressed="${fLv===k}">${k==='全部'?k:LV[k][0]}</button>`).join('');
   document.getElementById('lvRow').parentElement.hidden=fMich===OP;   // 單盤店沒有難度分級
-  document.getElementById('cathayRow').innerHTML=['全部','vip','general'].map(k=>`<button class="chip${fCathay===k?' on':''}" type="button" data-k="${k}" aria-pressed="${fCathay===k}">${k==='全部'?k:CATHAY[k][0]}</button>`).join('');
+  document.getElementById('cathayRow').innerHTML=['全部','vip','general',...CKS.filter(k=>k===fCathay||DATA.some(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&MICHCAT[fMich](d)&&(d.cards||[]).includes(k)))].map(k=>`<button class="chip${fCathay===k?' on':''}" type="button" data-k="${k}" aria-pressed="${fCathay===k}">${k==='全部'?k:(CATHAY[k]||CARDS[k])[0]}</button>`).join('');
 }
 document.querySelector('.ctl').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b||!DATA.length) return;  // 資料到之前不動作，免得清掉網址上的篩選
   if(b.dataset.d){toggle(b.dataset.d);return}
@@ -259,8 +260,11 @@ function gmapLine(d){
   if(d.gmaps.length===1&&!d.gmaps[0].n) return `<div class="gmaps">📍 ${a(d.gmaps[0])}</div>`;
   return `<div class="gmaps">📍 Google 地圖（${d.gmaps.length} 處）：${d.gmaps.map(a).join('')}</div>`;
 }
+const CARDS={amex:['美國運通','美國運通簽帳白金卡「白金美饌・全台指定餐廳」（頂級卡特約店家目錄的「美饌台灣」，2026-09-06 名單）'],cw:['國泰世界卡','國泰世華世界卡 官網「專屬優惠－美饌饗宴」餐廳'],esun:['玉山世界／無限','玉山世界卡／無限卡餐廳優惠（玉山 VBO 玉約饗樂、大地酒店、元紀．台灣菜）'],visa:['Visa無限卡','Visa 無限卡頂級饗宴'],mc:['MC世界卡','Mastercard 世界卡精選餐飲優惠'],jcb:['JCB極緻／晶緻','JCB 極緻卡／晶緻卡餐廳優惠（極緻卡 嚴選高級日料、五星美饌晚宴；晶緻卡 和風饗宴）']};  // 頂級卡特約店家目錄（card-dining-map）權益名單上、確認是同一家的店
+const CARDKEYS=Object.keys(CARDS);
 const CATHAY={vip:['國泰VIP','cvip','國泰世華 × inline 卡友專屬訂位：VIP／頂級卡友專屬餐廳'],general:['國泰一般','cgen','國泰世華 × inline 卡友專屬訂位：全卡友專屬餐廳']};
 function cathayBadge(d){ const c=CATHAY[d.cathay]; return c?`<span class="b ${c[1]}" title="${c[2]}">${c[0]}</span>`:''; }
+function cardBadges(d){ return (d.cards||[]).filter(k=>CARDS[k]).map(k=>`<span class="b ccard" title="${CARDS[k][1]}">${CARDS[k][0]}</span>`).join(''); }
 function opCard(d){
   const yy=y=>'’'+String(y).slice(2);
   const as=areasOf(d);
@@ -272,7 +276,7 @@ function opCard(d){
   const btns=bs?`<div class="actions">${bs}</div>`:'';
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div>${aka}</div><span class="citypill">${pill}</span></div>
     <div class="ctype">500盤 一盤餐廳${d.chk?'':'（未查證營業狀態與訂位方式）'}</div>
-    <div class="badges"><span class="b p500">🍽 500盤 1盤·${d.p500.map(yy).join('·')}</span>${RT[d.ruleType]?`<span class="b rt">${RT[d.ruleType]}</span>`:''}${cathayBadge(d)}</div>
+    <div class="badges"><span class="b p500">🍽 500盤 1盤·${d.p500.map(yy).join('·')}</span>${RT[d.ruleType]?`<span class="b rt">${RT[d.ruleType]}</span>`:''}${cathayBadge(d)}${cardBadges(d)}</div>
     ${d.chk?`<div class="meta"><span class="lbl">🏪 營業狀態(${esc(d.chk)} 查):</span>${ST[d.st]||''}</div>${d.opNote?`<div class="meta">📝 ${esc(d.opNote)}</div>`:''}<div class="rule"><b>訂位方式:</b>${esc(d.rule)}</div>`:''}
     ${d.addr?`<div class="meta"><span class="lbl">📮 地址(${d.addrYear} 官方地圖):</span>${esc(d.addr)}</div>`:''}
     ${multi}${dishLine(d)}${btns}
@@ -291,7 +295,7 @@ function card(d){
   const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:d.sns&&d.sns.length?d.sns.map(s=>`<a class="btn sns" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.n)} →</a>`).join(''):`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div><div class="cen">${esc(d.en||'')}</div></div><span class="citypill">${pill}</span></div>
     <div class="ctype">${esc(d.type)}${d.dist?' ・ '+esc(d.dist):''}</div>
-    <div class="badges">${mb}${p5}${lv}${rt}${aw}${cathayBadge(d)}</div>
+    <div class="badges">${mb}${p5}${lv}${rt}${aw}${cathayBadge(d)}${cardBadges(d)}</div>
     <div class="rule"><b>放位規則:</b>${esc(d.rule)}</div>
     ${d.price?`<div class="meta"><span class="lbl">💰 價位:</span>${esc(d.price)}　<span class="lbl">🎫 平台:</span>${esc(d.platform||'—')}</div>`:''}
     ${multi}${dishLine(d)}${btns}${gmapLine(d)}</div>`;
@@ -306,11 +310,11 @@ function render(){
     return `<div class="sect">${a===UNK||a===MUL?a:a+'區'}<small>${CITY_OF[a]||''}${CITY_OF[a]?'市・':''}${g.length} 間${fLabel()?'（'+fLabel()+'）':''}</small></div>`+(g.length?`<div class="grid">${g.map(card).join('')}</div>`:`<div class="note" style="padding:4px 2px 10px">此篩選條件在本區沒有收錄餐廳</div>`)}).join('');
   document.getElementById('empty').style.display=selected.length?'none':'block';
   document.getElementById('cnt').innerHTML=selected.length?`已勾選 <b>${selected.length}</b> 區・共 <b>${list.length}</b> 間${fLabel()?'（'+fLabel()+'）':''}`:`尚未勾選（雙北共 ${P.length} 間${fLabel()?'・'+fLabel():''}）`;
-  const hp=[selected.join(','),fMich!=='全部'?fMich:'',fCat!=='全部'?fCat:'',fRt!=='全部'?fRt:'',fCathay!=='全部'?fCathay:'',fLv!=='全部'?fLv:'']; while(hp.length>1&&!hp[hp.length-1]) hp.pop();  // 區|類別|種類|訂位規則|國泰|難度
+  const hp=[selected.join(','),fMich!=='全部'?fMich:'',fCat!=='全部'?fCat:'',fRt!=='全部'?fRt:'',fCathay!=='全部'?fCathay:'',fLv!=='全部'?fLv:'']; while(hp.length>1&&!hp[hp.length-1]) hp.pop();  // 區|類別|種類|訂位規則|國泰或信用卡|難度
   const h=hp.join('|'); history.replaceState(null,'',h?'#'+encodeURIComponent(h):location.pathname+location.search);
 }
 function readHash(){let h=''; try{h=decodeURIComponent(location.hash.slice(1))}catch(e){return} if(!h) return; const [ds,m,c,r,k,lv]=h.split('|');
-  if(m&&Object.prototype.hasOwnProperty.call(MICHCAT,m)) fMich=m; setAll(); ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK||a===MUL)&&ALLCOUNT[a]) SEL.add(a)}); if(fMich!==OP&&c&&CATS.includes(c)) fCat=c; if(r&&RTS.includes(r)) fRt=r; if(k==='vip'||k==='general') fCathay=k; if(fMich!==OP&&lv&&LVS.includes(lv)) fLv=lv; }
+  if(m&&Object.prototype.hasOwnProperty.call(MICHCAT,m)) fMich=m; setAll(); ds.split(',').filter(Boolean).forEach(a=>{if((ORDER.includes(a)||a===UNK||a===MUL)&&ALLCOUNT[a]) SEL.add(a)}); if(fMich!==OP&&c&&CATS.includes(c)) fCat=c; if(r&&RTS.includes(r)) fRt=r; if(k==='vip'||k==='general'||CKS.includes(k)) fCathay=k; if(fMich!==OP&&lv&&LVS.includes(lv)) fLv=lv; }
 window.addEventListener('hashchange',()=>{SEL.clear(); fMich='全部'; fCat='全部'; fRt='全部'; fCathay='全部'; fLv='全部'; readHash(); setAll(); if(DATA.length) render();});
 
 Promise.all([fetch('data.json',{cache:'no-cache'}).then(r=>r.json()),
@@ -321,6 +325,7 @@ Promise.all([fetch('data.json',{cache:'no-cache'}).then(r=>r.json()),
   CATS=[...new Set(DATA.filter(d=>!d.closed).map(d=>d.cat).filter(Boolean))].filter(c=>twinCats.has(c));
   RTS=Object.keys(RT).filter(k=>DATA.some(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&d.ruleType===k));
   LVS=['5','4','3','2','1'].filter(k=>DATA.some(d=>!d.closed&&!d.op&&(d.city==='台北'||d.city==='新北')&&String(d.level)===k));
+  CKS=CARDKEYS.filter(k=>DATA.some(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&(d.cards||[]).includes(k)));
   readHash(); setAll(); render();
 }).catch(e=>{document.getElementById('empty').innerHTML=`資料載入失敗（${esc(String(e))}）。請改由 <a href="index.html">主頁</a> 使用縣市篩選。`});
 </script>
