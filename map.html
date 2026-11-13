@@ -260,7 +260,7 @@ function gmapLine(d){
   if(d.gmaps.length===1&&!d.gmaps[0].n) return `<div class="gmaps">📍 ${a(d.gmaps[0])}</div>`;
   return `<div class="gmaps">📍 Google 地圖（${d.gmaps.length} 處）：${d.gmaps.map(a).join('')}</div>`;
 }
-const CARDS={amex:['美國運通','美國運通簽帳白金卡「白金美饌・全台指定餐廳」（頂級卡特約店家目錄的「美饌台灣」，2026-09-06 名單）'],cw:['國泰世界卡','國泰世華世界卡 官網「專屬優惠－美饌饗宴」餐廳'],esun:['玉山世界／無限','玉山世界卡／無限卡餐廳優惠（玉山 VBO 玉約饗樂、大地酒店、元紀．台灣菜）'],visa:['Visa無限卡','Visa 無限卡頂級饗宴'],mc:['MC世界卡','Mastercard 世界卡精選餐飲優惠'],jcb:['JCB極緻／晶緻','JCB 極緻卡／晶緻卡餐廳優惠（極緻卡 嚴選高級日料、五星美饌晚宴；晶緻卡 和風饗宴）']};  // 頂級卡特約店家目錄（card-dining-map）權益名單上、確認是同一家的店
+const CARDS={amex:['美國運通回饋','美國運通簽帳白金卡「白金美饌・全台指定餐廳」（頂級卡特約店家目錄的「美饌台灣」，2026-09-06 名單）'],amex50:['美國運通5折','美國運通 DiningCity Platinum「年度優惠」用餐享5折起（須透過 DiningCity 訂位；頂級卡特約店家目錄的 5折起名單，2026-11-13 與 DiningCity 現行名單相同）'],cw:['國泰世界卡','國泰世華世界卡 官網「專屬優惠－美饌饗宴」餐廳'],esun:['玉山世界／無限','玉山世界卡／無限卡餐廳優惠（玉山 VBO 玉約饗樂、大地酒店、元紀．台灣菜）'],visa:['Visa無限卡','Visa 無限卡頂級饗宴'],mc:['MC世界卡','Mastercard 世界卡精選餐飲優惠'],jcb:['JCB極緻／晶緻','JCB 極緻卡／晶緻卡餐廳優惠（極緻卡 嚴選高級日料、五星美饌晚宴；晶緻卡 和風饗宴）']};  // 頂級卡特約店家目錄（card-dining-map）權益名單上、確認是同一家的店
 const CARDKEYS=Object.keys(CARDS);
 const CATHAY={vip:['國泰VIP','cvip','國泰世華 × inline 卡友專屬訂位：VIP／頂級卡友專屬餐廳'],general:['國泰一般','cgen','國泰世華 × inline 卡友專屬訂位：全卡友專屬餐廳']};
 function cathayBadge(d){ const c=CATHAY[d.cathay]; return c?`<span class="b ${c[1]}" title="${c[2]}">${c[0]}</span>`:''; }
