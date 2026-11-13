@@ -292,7 +292,7 @@ function card(d){
   const as=areasOf(d);
   const pill=as.length===1?`${d.city}・${as[0]}區`:d.city;
   const multi=as.length>1?`<div class="note">📍 多分店：${as.map(a=>a+'區').join('・')}</div>`:'';
-  const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:d.sns&&d.sns.length?d.sns.map(s=>`<a class="btn sns" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.n)} →</a>`).join(''):`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`:''}</div>`;
+  const btns=`<div class="actions">${d.url?`<a class="btn book" href="${d.url}" target="_blank" rel="noopener">前往訂位頁 →</a>`:d.sns&&d.sns.length?d.sns.map(s=>`<a class="btn sns" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.n)} →</a>`).join(''):`<span class="btn dis">${d.ruleType==='member'?'無公開訂位管道':d.ruleType==='walkin'?'現場候位':d.ruleType==='phone'?'電話訂位':'見官方FB/IG公告'}</span>`}${d.phone?(/[；;／\/]/.test(d.phone)?telBtns(d.phone):`<a class="btn tel" href="tel:${d.phone.replace(/[^0-9+]/g,'')}">☎ ${d.phone}</a>`):''}</div>`;
   return `<div class="card"><div class="chead"><div><div class="cname">${esc(d.name)}</div><div class="cen">${esc(d.en||'')}</div></div><span class="citypill">${pill}</span></div>
     <div class="ctype">${esc(d.type)}${d.dist?' ・ '+esc(d.dist):''}</div>
     <div class="badges">${mb}${p5}${lv}${rt}${aw}${cathayBadge(d)}${cardBadges(d)}</div>
