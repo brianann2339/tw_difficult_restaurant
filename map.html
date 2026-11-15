@@ -149,7 +149,7 @@ footer a{color:var(--sub)}
   <div class="empty" id="empty">尚未勾選任何區。<br>請點地圖上的區塊，或在上方勾選想找的區。</div>
 
   <footer>
-    <b>說明</b>：本頁只列台北市、新北市且仍營業中的主頁收錄餐廳（主頁新增的 500碗 店，除了從名單頁移入、雙北已查證的 6 家，未查證營業狀態；「500碗」「500盤單盤」見下段）；區別依各店地址判定，多分店者列於各分店所在區並加註。放位規則、訂位連結等資料與<a href="index.html">主頁</a>相同，以各店最新公告為準。<br>
+    <b>說明</b>：本頁只列台北市、新北市且仍營業中的餐廳：主頁收錄的店（主頁新增的 500碗 店，除了從名單頁移入、雙北已查證的 6 家，未查證營業狀態），以及<a href="one-plate.html">500盤單盤・500碗 名單</a>中的店（見下段）。類別選「全部」時兩者都列；名單頁的店沒有種類、難度資料，選了種類或難度時只列主頁的店。「米其林星級」「必比登」「500盤」只列主頁的店；區別依各店地址判定，多分店者列於各分店所在區並加註。放位規則、訂位連結等資料與<a href="index.html">主頁</a>相同，以各店最新公告為準。<br>
     「500碗」列出主頁與<a href="one-plate.html">500盤單盤・500碗 名單</a>中台北市、新北市有《500碗》入選紀錄的店（主頁新增與名單頁的 500碗 店未查證營業狀態與訂位方式；例外是名單頁中雙北已查證的 500盤 單盤店，卡片顯示營業狀態與訂位方式的查證結果，以及從這些店移入主頁的 6 家，地圖卡片只顯示訂位方式的查證結果，營業狀態的查證結果寫在主頁卡片備註），區別：主頁原本就有的店照主頁資料，也是 500盤 單盤店的照下述 500盤 單盤店的區別，其餘依 500碗 官方地圖上的地址。「500盤單盤」列出名單頁中台北市、新北市的 500盤 單盤店（歷屆每屆都只得 1 盤、主頁未收錄）；區別依 500盤 2025–2026 官方地圖上的地址，沒有官方地址的店依 Google 地圖或網路查到的地址判定（名單未標分店、得獎時有多家分店者列於各分店所在區，遷址者新舊址都列），有多家分店而無法確定得獎時是哪幾家的列在「多分店」，尚未查到地址的列在「未分區」；已知歇業的店與分店（含只有 Google 地圖標示歇業的）不列；「多分店」的店若查到來源點名、仍營業的分店，改列於該分店所在區（卡片註明多分店）。營業狀態以 Google 地圖是否標示歇業為準（卡片註明查證年月），找不到 Google 地點的標「未確認」；訂位方式查自店家官網、官方社群、訂位平台與報導，查不到的照實標示，實際以各店最新公告為準；2021 名單未分地區、只在 2021 得盤的店未列入，但也在 500碗 名單的改用 500碗 官方地圖的地址分區列入（這些店未查證營業狀態與訂位方式，卡片會註明）。<br>
     行政區界線與區中心座標取自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>（© OpenStreetMap contributors，ODbL；經 Nominatim 取得並簡化），底圖為 OpenStreetMap 標準圖磚。
   </footer>
@@ -162,7 +162,7 @@ const NTP=['板橋','三重','中和','永和','新莊','新店','樹林','鶯�
 const ORDER=[...TPE,...NTP]; const UNK='未分區', MUL='多分店';  // 多分店：一盤名單上有多家分店、得獎時是哪幾家未確認的店（d.multi）
 const CITY_OF={}; TPE.forEach(d=>CITY_OF[d]='台北'); NTP.forEach(d=>CITY_OF[d]='新北');
 const MICH={s3:['★★★ 三星','mstar'],s2:['★★ 二星','mstar'],s1:['★ 一星','mstar'],bib:['必比登','mbib'],sel:['米其林入選','msel']};
-const MICHCAT={'全部':d=>!d.op,'米其林星級':d=>['s3','s2','s1'].includes(d.mich),'必比登':d=>d.mich==='bib','500盤':d=>!!d.p500&&!d.op,'500碗':d=>!!(d.b500&&d.b500.length),'500盤單盤':d=>!!d.op&&!!(d.p500&&d.p500.length)};
+const MICHCAT={'全部':d=>true,'米其林星級':d=>['s3','s2','s1'].includes(d.mich),'必比登':d=>d.mich==='bib','500盤':d=>!!d.p500&&!d.op,'500碗':d=>!!(d.b500&&d.b500.length),'500盤單盤':d=>!!d.op&&!!(d.p500&&d.p500.length)};
 const OP='500盤單盤', BOWL='500碗';
 const NOCAT=new Set([OP,BOWL]);  // 名單頁的店（d.op）沒有種類、難度資料：選這兩個類別時隱藏種類列與難度列  // 一盤名單（one-plate.json）的雙北店：沒有種類資料，選這個類別時隱藏種類列
 const ST={open:'Google 地圖未標歇業',unk:'未確認（Google 地圖找不到這家店）',paused:'暫停營業'};  // 單盤店營業狀態（d.st）
@@ -180,8 +180,8 @@ function fLabel(){const a=[fMich,fCat,fRt==='全部'?fRt:RT[fRt],fLv==='全部'?
 function areasOf(d){return Array.isArray(d.area)? d.area : (d.area? [d.area] : [])}
 function pool(){return DATA.filter(d=>!d.closed && (d.city==='台北'||d.city==='新北') && MICHCAT[fMich](d) && (fCat==='全部'||d.cat===fCat) && (fRt==='全部'||d.ruleType===fRt) && (fLv==='全部'||String(d.level)===fLv) && (fCathay==='全部'||d.cathay===fCathay||(d.cards||[]).includes(fCathay)))}
 function counts(list){const c={}; for(const d of list){const as=areasOf(d); if(!as.length){const k=d.multi?MUL:UNK; c[k]=(c[k]||0)+1;} for(const a of as) c[a]=(c[a]||0)+1;} return c}
-const ALLCOUNT={}; // 不分類別的店數（決定哪些區出現）；主站各類別與「500盤單盤」各算各的
-function setAll(){for(const k in ALLCOUNT) delete ALLCOUNT[k]; Object.assign(ALLCOUNT,counts(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&(fMich===OP||fMich===BOWL? MICHCAT[fMich](d) : !d.op))))}
+const ALLCOUNT={}; // 不分類別的店數（決定哪些區出現）：「全部」算主頁加名單頁；主頁各類別只算主頁；「500碗」「500盤單盤」各算各的
+function setAll(){for(const k in ALLCOUNT) delete ALLCOUNT[k]; Object.assign(ALLCOUNT,counts(DATA.filter(d=>!d.closed&&(d.city==='台北'||d.city==='新北')&&(fMich===OP||fMich===BOWL||fMich==='全部'? MICHCAT[fMich](d) : !d.op))))}
 let CUR={};         // 目前類別下各區店數（tooltip／填色／點擊用）
 function mapErr(msg){document.getElementById('map').insertAdjacentHTML('beforeend',`<div class="maperr">${msg}</div>`)}
 
